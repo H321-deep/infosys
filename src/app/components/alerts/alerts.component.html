@@ -1,0 +1,173 @@
+<div class="layout">
+  <app-sidebar
+    [userName]="authService.currentUser()?.name || ''"
+    [isAdmin]="authService.isAdmin()"
+  />
+
+  <div class="alerts-container">
+    <header class="header">
+      <div class="header-content">
+        <h1>Low-Stock Alerts</h1>
+        <div class="header-actions">
+          <span class="user-info">{{ authService.currentUser()?.name }}</span>
+          <button class="btn-secondary" (click)="navigateToWelcome()">Back to Dashboard</button>
+          <button class="btn-logout" (click)="authService.logout()">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      @if (error()) {
+        <div class="alert alert-error">{{ error() }}</div>
+      }
+
+      @if (success()) {
+        <div class="alert alert-success">{{ success() }}</div>
+      }
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon">📦</div>
+          <div>
+            <p>Total Low-Stock Items</p>
+            <h3>{{ lowStockCount() }}</h3>
+          </div>
+        </div>
+        <div class="stat-card warning">
+          <div class="stat-icon">⚠️</div>
+          <div>
+            <p>Low Stock Alerts</p>
+            <h3>{{ lowStockCount() }}</h3>
+          </div>
+        </div>
+        <div class="stat-card danger">
+          <div class="stat-icon">⛔</div>
+          <div>
+            <p>Out of Stock</p>
+            <h3>{{ outOfStockCount() }}</h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="alerts-layout">
+        <section class="alerts-table-card">
+          <div class="section-header">
+            <h2>Low-Stock Products</h2>
+            <div class="table-actions">
+              <div class="search-box">
+                <input type="text" placeholder="Search..." />
+                <span class="search-icon">🔍</span>
+              </div>
+              <button class="filter-pill">All Categories ▾</button>
+              <button class="filter-pill">All Branches ▾</button>
+            </div>
+          </div>
+
+          @if (lowStockProducts().length === 0) {
+            <div class="no-alerts">
+              <div class="no-alerts-icon">✅</div>
+              <h3>All Good!</h3>
+              <p>No low-stock alerts at this time.</p>
+            </div>
+          } @else {
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>SKU</th>
+                    <th>Stock</th>
+                    <th>Min</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (product of lowStockProducts(); track product.id) {
+                    <tr>
+                      <td>
+                        <div class="product-cell">
+                          <span class="product-dot"></span>
+                          <div>
+                            <strong>{{ product.name }}</strong>
+                            <span>{{ product.category }}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>{{ product.sku }}</td>
+                      <td><span class="stock-pill">{{ product.stockLevel }}</span></td>
+                      <td>{{ product.minStockThreshold }}</td>
+                      <td>
+                        <span class="status-pill" [class.critical]="product.stockLevel === 0">
+                          {{ product.stockLevel === 0 ? 'Critical' : 'Low' }}
+                        </span>
+                      </td>
+                      <td>
+                        <button class="btn-action" (click)="navigateToProduct(product.id)">Reorder</button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </section>
+
+        <aside class="settings-card">
+          <h2>Alert Settings</h2>
+          <div class="settings-content">
+            <label class="setting-item">
+              <input
+                type="checkbox"
+                [(ngModel)]="alertSettings().enabled"
+                (change)="saveSettings()"
+              />
+              <div>
+                <span>Enable Alerts</span>
+                <p>Receive notifications when stock falls below the minimum threshold.</p>
+              </div>
+            </label>
+
+            <label class="setting-item">
+              <input
+                type="checkbox"
+                [(ngModel)]="alertSettings().emailAlerts"
+                (change)="saveSettings()"
+                [disabled]="!alertSettings().enabled"
+              />
+              <div>
+                <span>Email Alerts</span>
+                <p>Receive alerts via email.</p>
+              </div>
+            </label>
+
+            <label class="setting-item">
+              <input
+                type="checkbox"
+                [(ngModel)]="alertSettings().smsAlerts"
+                (change)="saveSettings()"
+                [disabled]="!alertSettings().enabled"
+              />
+              <div>
+                <span>SMS Alerts</span>
+                <p>Receive alerts via SMS.</p>
+              </div>
+            </label>
+
+            <div class="threshold-row">
+              <span>Default Threshold</span>
+              <input
+                type="number"
+                [ngModel]="defaultThreshold()"
+                (ngModelChange)="defaultThreshold.set($event)"
+              />
+            </div>
+
+            <button class="btn-save-settings" (click)="saveSettings()">Save Settings</button>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+

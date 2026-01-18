@@ -1,0 +1,167 @@
+<div class="layout">
+  <app-sidebar
+    [userName]="authService.currentUser()?.name || ''"
+    [isAdmin]="authService.isAdmin()"
+  />
+
+  <div class="welcome-container">
+    <header class="topbar">
+      <div class="search-bar">
+        <input
+          type="text"
+          placeholder="Search products, orders..."
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)"
+        />
+        <span class="search-icon">🔍</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" title="Notifications">🔔</button>
+        <div class="user-chip">
+          <span class="user-dot">●</span>
+          <span>{{ authService.currentUser()?.role }}</span>
+        </div>
+        <button class="btn-primary" (click)="navigateToProducts()">+ Add Product</button>
+        <button class="btn-logout" (click)="logout()">Logout</button>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="dashboard-header">
+        <div>
+          <h1>Dashboard Overview</h1>
+          <p>Welcome back, {{ authService.currentUser()?.name }}. Here's what's happening today.</p>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card products">
+          <div class="stat-icon">📦</div>
+          <div>
+            <p>Total Products</p>
+            <h3>{{ totalProducts() }}</h3>
+          </div>
+        </div>
+        <div class="stat-card alerts">
+          <div class="stat-icon">⚠️</div>
+          <div>
+            <p>Low Stock Items</p>
+            <h3>{{ lowStockCount() }}</h3>
+          </div>
+        </div>
+        <div class="stat-card sales">
+          <div class="stat-icon">📈</div>
+          <div>
+            <p>Total Stock Value</p>
+            <h3>${{ totalPurchases().toFixed(2) }}</h3>
+          </div>
+        </div>
+        <div class="stat-card employees">
+          <div class="stat-icon">👥</div>
+          <div>
+            <p>Active Employees</p>
+            <h3>{{ authService.isAdmin() ? 4 : 1 }}</h3>
+          </div>
+        </div>
+        <div class="stat-card out">
+          <div class="stat-icon">⛔</div>
+          <div>
+            <p>Out of Stock</p>
+            <h3>{{ outOfStockCount() }}</h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Recent Alerts</h2>
+            <button class="link-btn" (click)="navigateToAlerts()">View All</button>
+          </div>
+          <div class="panel-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Alert Type</th>
+                  <th>Severity</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (filteredAlerts().length === 0) {
+                  <tr>
+                    <td colspan="4" class="empty">No alerts found</td>
+                  </tr>
+                } @else {
+                  @for (alert of filteredAlerts(); track alert.id) {
+                    <tr>
+                      <td>
+                        <div class="cell-product">
+                          <span class="product-dot"></span>
+                          <div>
+                            <strong>{{ alert.name }}</strong>
+                            <span>Low stock · {{ alert.sku }}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>Low Stock</td>
+                      <td>
+                        <span class="badge" [class.critical]="alert.stockLevel === 0">
+                          {{ alert.stockLevel === 0 ? 'Critical' : 'Warning' }}
+                        </span>
+                      </td>
+                      <td>Just now</td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Recent Transactions</h2>
+            <button class="link-btn" (click)="navigateToTransactions()">View All</button>
+          </div>
+          <div class="panel-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Type</th>
+                  <th>Quantity</th>
+                  <th>User</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (filteredTransactions().length === 0) {
+                  <tr>
+                    <td colspan="5" class="empty">No transactions found</td>
+                  </tr>
+                } @else {
+                  @for (transaction of filteredTransactions(); track transaction.id) {
+                    <tr>
+                      <td>{{ transaction.productName }}</td>
+                      <td>
+                        <span class="pill" [class.sale]="transaction.type === 'sale'">
+                          {{ transaction.type === 'sale' ? 'Sale' : 'Purchase' }}
+                        </span>
+                      </td>
+                      <td>{{ transaction.quantity }}</td>
+                      <td>{{ transaction.userName }}</td>
+                      <td>{{ transaction.date | date: 'MMM d, HH:mm' }}</td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+
