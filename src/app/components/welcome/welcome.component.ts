@@ -51,6 +51,37 @@ export class WelcomeComponent implements OnInit {
       transaction.type.toLowerCase().includes(term)
     );
   });
+  stockSummary = computed(() => {
+    const total = this.totalProducts();
+    const outOfStock = this.outOfStockCount();
+    const lowStockRaw = this.lowStockCount();
+    const lowStock = Math.max(lowStockRaw - outOfStock, 0);
+    const available = Math.max(total - lowStock - outOfStock, 0);
+    const safeTotal = Math.max(total, 1);
+
+    return {
+      total,
+      available,
+      lowStock,
+      outOfStock,
+      availablePct: Math.round((available / safeTotal) * 100),
+      lowStockPct: Math.round((lowStock / safeTotal) * 100),
+      outOfStockPct: Math.round((outOfStock / safeTotal) * 100)
+    };
+  });
+  salesPurchasesSummary = computed(() => {
+    const sales = this.totalSales();
+    const purchases = this.totalPurchases();
+    const total = sales + purchases;
+    const safeTotal = total > 0 ? total : 1;
+
+    return {
+      sales,
+      purchases,
+      salesPct: Math.round((sales / safeTotal) * 100),
+      purchasesPct: Math.round((purchases / safeTotal) * 100)
+    };
+  });
 
   constructor(
     public authService: AuthService,

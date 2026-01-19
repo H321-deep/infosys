@@ -72,6 +72,75 @@
         </div>
       </div>
 
+      <section class="panel chart-panel">
+        <div class="panel-header">
+          <h2>Dashboard Trends</h2>
+          <span class="panel-subtitle">Last 30 days</span>
+        </div>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h3>Stock Status</h3>
+            <div
+              class="stacked-bar"
+              role="img"
+              aria-label="Stock status breakdown"
+            >
+              <span
+                class="segment available"
+                [style.width.%]="stockSummary().availablePct"
+              ></span>
+              <span
+                class="segment low"
+                [style.width.%]="stockSummary().lowStockPct"
+              ></span>
+              <span
+                class="segment out"
+                [style.width.%]="stockSummary().outOfStockPct"
+              ></span>
+            </div>
+            <div class="legend">
+              <div class="legend-item">
+                <span class="dot available"></span>
+                Available {{ stockSummary().available }}
+              </div>
+              <div class="legend-item">
+                <span class="dot low"></span>
+                Low {{ stockSummary().lowStock }}
+              </div>
+              <div class="legend-item">
+                <span class="dot out"></span>
+                Out {{ stockSummary().outOfStock }}
+              </div>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h3>Sales vs Purchases</h3>
+            <div class="bar-group">
+              <div class="bar-row">
+                <span class="label">Sales</span>
+                <div class="bar">
+                  <span
+                    class="fill sales"
+                    [style.width.%]="salesPurchasesSummary().salesPct"
+                  ></span>
+                </div>
+                <span class="value">${{ totalSales().toFixed(2) }}</span>
+              </div>
+              <div class="bar-row">
+                <span class="label">Purchases</span>
+                <div class="bar">
+                  <span
+                    class="fill purchases"
+                    [style.width.%]="salesPurchasesSummary().purchasesPct"
+                  ></span>
+                </div>
+                <span class="value">${{ totalPurchases().toFixed(2) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <div class="dashboard-grid">
         <section class="panel">
           <div class="panel-header">

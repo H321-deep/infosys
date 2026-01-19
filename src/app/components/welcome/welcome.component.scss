@@ -231,6 +231,11 @@
   }
 }
 
+.panel-subtitle {
+  font-size: 12px;
+  color: #a0aec0;
+}
+
 .link-btn {
   border: none;
   background: transparent;
@@ -241,6 +246,132 @@
 
 .panel-table {
   overflow-x: auto;
+}
+
+.chart-panel {
+  margin-bottom: 20px;
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.chart-card {
+  background: #f9fbff;
+  border-radius: 14px;
+  padding: 16px;
+  border: 1px solid #eef1f8;
+
+  h3 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    color: #2d3748;
+  }
+}
+
+.stacked-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 999px;
+  background: #edf2ff;
+  overflow: hidden;
+}
+
+.segment {
+  height: 100%;
+}
+
+.segment.available {
+  background: #48bb78;
+}
+
+.segment.low {
+  background: #f6ad55;
+}
+
+.segment.out {
+  background: #f56565;
+}
+
+.legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  font-size: 12px;
+  color: #718096;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5f0;
+}
+
+.dot.available {
+  background: #48bb78;
+}
+
+.dot.low {
+  background: #f6ad55;
+}
+
+.dot.out {
+  background: #f56565;
+}
+
+.bar-group {
+  display: grid;
+  gap: 12px;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 90px;
+  align-items: center;
+  gap: 10px;
+}
+
+.bar {
+  height: 10px;
+  border-radius: 999px;
+  background: #edf2ff;
+  overflow: hidden;
+}
+
+.fill {
+  display: block;
+  height: 100%;
+}
+
+.fill.sales {
+  background: #5a6efb;
+}
+
+.fill.purchases {
+  background: #63b3ed;
+}
+
+.label {
+  font-size: 12px;
+  color: #718096;
+  font-weight: 600;
+}
+
+.value {
+  font-size: 12px;
+  color: #2d3748;
+  text-align: right;
+  font-weight: 600;
 }
 
 table {
