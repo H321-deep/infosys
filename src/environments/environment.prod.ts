@@ -1,6 +1,5 @@
 export const environment = {
-  production: false,
+  production: true,
   apiUrl: 'https://infosys-backend-pr1k.onrender.com'
 };
-
 
