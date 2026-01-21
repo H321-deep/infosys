@@ -1,0 +1,326 @@
+<div class="layout">
+  <app-sidebar
+    [userName]="authService.currentUser()?.name || ''"
+    [isAdmin]="authService.isAdmin()"
+  />
+
+  <div class="products-container">
+    <header class="header">
+      <div class="header-content">
+        <h1>Product Management</h1>
+        <div class="header-actions">
+          <span class="user-info">{{ authService.currentUser()?.name }}</span>
+          <button class="btn-secondary" (click)="navigateToWelcome()">Back to Dashboard</button>
+          <button class="btn-logout" (click)="authService.logout()">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      @if (error()) {
+        <div class="alert alert-error">{{ error() }}</div>
+      }
+
+      @if (success()) {
+        <div class="alert alert-success">{{ success() }}</div>
+      }
+
+      <div class="toolbar">
+        <div class="search-box">
+          <input
+            type="text"
+            placeholder="Search products by name, SKU, category, or supplier..."
+            [ngModel]="searchTerm()"
+            (ngModelChange)="searchTerm.set($event); applyFilters()"
+            class="search-input"
+          />
+          <span class="search-icon">🔍</span>
+        </div>
+        <div class="toolbar-right">
+          <div class="product-count">
+            Total Products: {{ filteredProducts().length }}
+          </div>
+          @if (authService.isAdmin()) {
+            <button class="btn-create" (click)="startCreate()" [disabled]="isCreating() || editingProduct()">
+              + Add Product
+            </button>
+          }
+        </div>
+      </div>
+
+      @if (isCreating() && authService.isAdmin()) {
+        <div class="create-product-form">
+          <h3>Create New Product</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>SKU *</label>
+              <input type="text" [(ngModel)]="editForm.sku" placeholder="Enter SKU" />
+            </div>
+            <div class="form-group">
+              <label>Product Name *</label>
+              <input type="text" [(ngModel)]="editForm.name" placeholder="Enter product name" />
+            </div>
+            <div class="form-group">
+              <label>Category *</label>
+              <select [(ngModel)]="editForm.category">
+                <option value="">Select category</option>
+                @for (cat of categories; track cat) {
+                  <option [value]="cat">{{ cat }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Supplier</label>
+              <input type="text" [(ngModel)]="editForm.supplier" placeholder="Enter supplier name" />
+            </div>
+            <div class="form-group">
+              <label>Unit Price</label>
+              <input type="number" [(ngModel)]="editForm.unitPrice" placeholder="0.00" step="0.01" min="0" />
+            </div>
+            <div class="form-group">
+              <label>Minimum Stock Threshold</label>
+              <input type="number" [(ngModel)]="editForm.minStockThreshold" placeholder="0" step="1" min="0" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn-save" (click)="saveProduct()">Create Product</button>
+            <button class="btn-cancel" (click)="cancelEdit()">Cancel</button>
+          </div>
+        </div>
+      }
+
+      <div class="products-grid">
+        @if (filteredProducts().length === 0) {
+          <div class="no-data">
+            <div class="no-data-icon">📦</div>
+            <p>No products found</p>
+            @if (searchTerm()) {
+              <button class="btn-link" (click)="searchTerm.set(''); applyFilters()">Clear search</button>
+            }
+          </div>
+        } @else {
+          @for (product of paginatedProducts(); track product.id) {
+            <div class="product-card" [class.low-stock]="isLowStock(product)">
+              @if (editingProduct()?.id === product.id && authService.isAdmin()) {
+                <div class="product-edit-form">
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label>SKU *</label>
+                      <input type="text" [(ngModel)]="editForm.sku" />
+                    </div>
+                    <div class="form-group">
+                      <label>Product Name *</label>
+                      <input type="text" [(ngModel)]="editForm.name" />
+                    </div>
+                    <div class="form-group">
+                      <label>Category *</label>
+                      <select [(ngModel)]="editForm.category">
+                        <option value="">Select category</option>
+                        @for (cat of categories; track cat) {
+                          <option [value]="cat">{{ cat }}</option>
+                        }
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label>Supplier</label>
+                      <input type="text" [(ngModel)]="editForm.supplier" />
+                    </div>
+                    <div class="form-group">
+                      <label>Unit Price</label>
+                      <input type="number" [(ngModel)]="editForm.unitPrice" step="0.01" min="0" />
+                    </div>
+                    <div class="form-group">
+                      <label>Min Stock Threshold</label>
+                      <input type="number" [(ngModel)]="editForm.minStockThreshold" step="1" min="0" />
+                    </div>
+                  </div>
+                  <div class="form-actions">
+                    <button class="btn-save" (click)="saveProduct()">Save</button>
+                    <button class="btn-cancel" (click)="cancelEdit()">Cancel</button>
+                  </div>
+                </div>
+              } @else {
+                <div class="product-header">
+                  <div class="product-info">
+                    <h3 class="product-name">{{ product.name }}</h3>
+                    <span class="product-sku">SKU: {{ product.sku }}</span>
+                  </div>
+                  <div class="product-status" [class]="getStockStatusClass(product)">
+                    @if (product.stockLevel === 0) {
+                      Out of Stock
+                    } @else if (isLowStock(product)) {
+                      Low Stock
+                    } @else {
+                      In Stock
+                    }
+                  </div>
+                </div>
+                <div class="product-details">
+                  <div class="detail-row">
+                    <span class="detail-label">Category:</span>
+                    <span class="detail-value">{{ product.category }}</span>
+                  </div>
+                  @if (product.supplier) {
+                    <div class="detail-row">
+                      <span class="detail-label">Supplier:</span>
+                      <span class="detail-value">{{ product.supplier }}</span>
+                    </div>
+                  }
+                  <div class="detail-row">
+                    <span class="detail-label">Unit Price:</span>
+                    <span class="detail-value">${{ product.unitPrice.toFixed(2) }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Stock Level:</span>
+                    <span class="detail-value stock-value">{{ product.stockLevel }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Min Threshold:</span>
+                    <span class="detail-value">{{ product.minStockThreshold }}</span>
+                  </div>
+                </div>
+                @if (authService.isAdmin()) {
+                  <div class="product-actions">
+                    <button class="btn-stock-in" (click)="openStockModal(product, 'in')">Stock In</button>
+                    <button class="btn-stock-out" (click)="openStockModal(product, 'out')">Stock Out</button>
+                    <button class="btn-edit" (click)="startEdit(product)">Edit</button>
+                    <button class="btn-delete" (click)="deleteProduct(product.id)">Delete</button>
+                  </div>
+                }
+              }
+            </div>
+          }
+        }
+      </div>
+
+      @if (filteredProducts().length > 0 && totalPages() > 1) {
+        <div class="pagination-container">
+          <div class="pagination-info">
+            Showing {{ ((currentPage() - 1) * pageSize) + 1 }} - {{ Math.min(currentPage() * pageSize, filteredProducts().length) }} of {{ filteredProducts().length }} products
+          </div>
+          <div class="pagination-controls">
+            <button 
+              class="pagination-btn" 
+              [disabled]="currentPage() === 1"
+              (click)="previousPage()"
+              [class.disabled]="currentPage() === 1"
+            >
+              ← Previous
+            </button>
+            
+            <div class="page-numbers">
+              @if (totalPages() <= 7) {
+                @for (page of getPageNumbers(); track page) {
+                  <button
+                    class="page-number"
+                    [class.active]="currentPage() === page"
+                    (click)="goToPage(page)"
+                  >
+                    {{ page }}
+                  </button>
+                }
+              } @else {
+                @if (currentPage() <= 3) {
+                  @for (page of getPageNumbers(); track page) {
+                    <button
+                      class="page-number"
+                      [class.active]="currentPage() === page"
+                      (click)="goToPage(page)"
+                    >
+                      {{ page }}
+                    </button>
+                  }
+                  <span class="page-ellipsis">...</span>
+                  <button
+                    class="page-number"
+                    (click)="goToPage(totalPages())"
+                  >
+                    {{ totalPages() }}
+                  </button>
+                } @else if (currentPage() >= totalPages() - 2) {
+                  <button
+                    class="page-number"
+                    (click)="goToPage(1)"
+                  >
+                    1
+                  </button>
+                  <span class="page-ellipsis">...</span>
+                  @for (page of getPageNumbers(); track page) {
+                    <button
+                      class="page-number"
+                      [class.active]="currentPage() === page"
+                      (click)="goToPage(page)"
+                    >
+                      {{ page }}
+                    </button>
+                  }
+                } @else {
+                  <button
+                    class="page-number"
+                    (click)="goToPage(1)"
+                  >
+                    1
+                  </button>
+                  <span class="page-ellipsis">...</span>
+                  @for (page of getPageNumbers(); track page) {
+                    <button
+                      class="page-number"
+                      [class.active]="currentPage() === page"
+                      (click)="goToPage(page)"
+                    >
+                      {{ page }}
+                    </button>
+                  }
+                  <span class="page-ellipsis">...</span>
+                  <button
+                    class="page-number"
+                    (click)="goToPage(totalPages())"
+                  >
+                    {{ totalPages() }}
+                  </button>
+                }
+              }
+            </div>
+            
+            <button 
+              class="pagination-btn"
+              [disabled]="currentPage() === totalPages()"
+              (click)="nextPage()"
+              [class.disabled]="currentPage() === totalPages()"
+            >
+              Next →
+            </button>
+          </div>
+        </div>
+      }
+    </main>
+  </div>
+</div>
+
+@if (showStockModal()) {
+  <div class="modal-overlay" (click)="closeStockModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ stockType() === 'in' ? 'Stock In' : 'Stock Out' }} - {{ stockModalProduct()?.name }}</h3>
+        <button class="modal-close" (click)="closeStockModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Quantity</label>
+          <input type="number" [(ngModel)]="stockQuantity" placeholder="Enter quantity" step="1" min="1" />
+          <p class="form-hint">
+            Current Stock: <strong>{{ stockModalProduct()?.stockLevel }}</strong>
+          </p>
+          @if (stockType() === 'out' && stockQuantity() > (stockModalProduct()?.stockLevel || 0)) {
+            <p class="form-error">Insufficient stock</p>
+          }
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeStockModal()">Cancel</button>
+        <button class="btn-save" (click)="updateStock()">Confirm</button>
+      </div>
+    </div>
+  </div>
+}
+
